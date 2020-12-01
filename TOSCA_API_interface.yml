@@ -1,40 +1,19 @@
 tosca_definitions_version: tosca_simple_yaml_1_3
 description: Contains an interface derived from an OpenAPI OAS3 document as an example of the proposed mapping
 
-#artifact_types:
-  # map of artifact type definitions
-  # artifacts are scripts etc. which can be run to install etc. defined nodes
-  # each of the form
-  # <artifact_type_name>: # mandatory name
-    #derived_from: <parent_artifact_type_name> # mandatory defined artifact type
-    # version: <version_number>
-    #metadata: 
-      #<map of string>
-    #description: <artifact_description>
-    #mime_type: <mime_type_string>
-    #file_ext: [ <file_extensions> ]
-    #properties:
-      #<property_definitions>
+artifact_types:
+  oas3.json:
+    description: major version 3 of OpenAPI Specification as specified by https://www.openapis.org/ expressed in JSON
+    derived_from: tosca.artifacts.Root
+    mime_type: application/json
+    file_ext: [ json ]
+
+  oas3.yaml:
+    description: major version 3 of OpenAPI Specification as specified by https://www.openapis.org/ expressed in YAML
+    derived_from: tosca.artifacts.Root
+    file_ext: [ yaml, yml ]
 
 data_types:
-  rest_api_url:
-    derived_from: string
-    description: A string to hold a URL used in RESTAPI specifications. Use a regular expression to limit strings to valid URLs
-    constraints:
-      - pattern: ^[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)
-
-  rest_api_server_variables:
-    description: A complex datatype to hold the server variable object of OpenAPI spec
-    properties:
-      enum:
-        type: list
-        entry_schema: 
-          type: string
-      default:
-        type: string
-      description:
-        type: string
-
   rest_api_server_entry:
     description: A complex datatype to hold an entry in the servers list defined in an OpenAPI spec
     properties:
@@ -47,79 +26,52 @@ data_types:
         type: rest_api_server_variables
         required: false
 
+  rest_api_url:
+    derived_from: string
+    description: A string to hold a URL used in RESTAPI specifications. Use a regular expression to limit strings to valid URLs
+    constraints:
+      - pattern: ^[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)
+        
+  rest_api_server_variables:
+    description: A complex datatype to hold the server variable object of OpenAPI spec
+    properties:
+      enum:
+        type: list
+        entry_schema: 
+          type: string
+      default:
+        type: string
+      description:
+        type: string
+
+
+
   Category:
     derived_from: json
     constraints:
-      - schema: {"$schema": "schemas/Category.json"}
+      - schema: {"schemas/Category.json"}
 
   Tag:
     derived_from: json
     constraints:
-      - schema: {"$schema": "schemas/Tag.json"}
+      - schema: {"schemas/Tag.json"}
 
   Pet:
     derived_from: json
     constraints:
-      - schema: {"$schema": "schemas/Pet.json"}
+      - schema: {"schemas/Pet.json"}
 
+  status_item:
+    derived_from: string
+    constraints:
+      - valid_values:
+        - available
+        - pending
+        - sold
 
-
-
-
-#   # map of datatype definitions
-#   # some are defined in the spec, this is for refining those or creating new ones
-#   # each of the form
-#   # <data_type_name>: # mandatory name
-#     #derived_from: <existing_type_name> #  defined data type is mandaotry unless there is a properties section with at least one entry
-#     #version: <version_number>
-#     #metadata: 
-#       #<map of string>
-#     #description: <datatype_description>
-#     #constraints:
-#     # list of <type_constraints>
-#     # each of one of the forms
-#       # Scalar grammar
-#       #<operator>: <scalar_value> 
-#       # Dual scalar grammar
-#       #<operator>: [ <scalar_value_1>, <scalar_value_2> ]
-#       # List grammar
-#       #<operator> [ <value_1>, <value_2>, ..., <value_n> ]
-#       # Regular expression (regex) grammar
-#       #pattern: <regular_expression_value>
-#       # Schema grammar
-#       #schema: <schema_definition>
-
-#     #properties:
-#       #map of <property_definitions>
-#       # each of the form
-#         #requirements:
-#           #list of - <requirement_definitions>
-#         #capabilities:
-#           #map of <capability_definitions>
-#         #interfaces: 
-#           #map of <interface_definitions>
-          
-#         #artifacts:
-#           # map of <artifact_definitions> 
-#           # each of one of two alternate forms
-#           # short form
-#           # <artifact_name>: <artifact_file_URI>
-#           # long form
-#           # <artifact_name>: 
-#             # description: <artifact_description> # mandatory name
-#             # type: <artifact_type_name> # mandatory defined artifact node type
-#             # file: <artifact_file_URI> 
-#             # repository: <artifact_repository_name>
-#             # deploy_path: <file_deployment_path>
 
 interface_types:
-  # map of interface type definitions
-  # a TOSCA interface is a way of managing a TOSCA node. They are the nothing to do with networking. 
-  # some are defined in the spec, including a standard set of create, configure, start, stop, delete tosca.interfaces.node.lifecycle.Standard: this is for refining those or creating new ones
-  # each of the form
   pet_store:
-    #derived_from: <parent_interface_type_name>
-    #version: <version_number>
     metadata:
       open_api_info: "  description: |-
     This is a sample Pet Store Server based on the OpenAPI 3.0 specification.  You can find out more about
@@ -142,76 +94,64 @@ interface_types:
     inputs: 
       open_api_servers:
         # I would like to just refer to a data type definition rather than define the list here in the interface type definition but waiting on a fix to puccini issue #40
-        description: a list of servers which implement this interface. Structure matches that in OAS3. Allows URL to be given a value at runtime using get_attribute on the instantiate node which provides the RestAPI server function for this interface
+        description: A list of servers which implement this interface. Structure matches that in OAS3. Allows URL to be given a value at runtime using get_attribute on the instantiate node which provides the RestAPI server function for this interface
         type: list
         entry_schema: rest_api_server_entry
 
     operations:
       addPet:
         description: Add a new pet to the store
-        #inputs:
-          
-          #<property_definitions>
-                    # each of the form
-            #<property_name>: #mandatory unique string
-            #type: <property_type> # name of a defined property type.
-            #description: <property_description>
-            #required: <property_required> # boolean, default true
-            #default: <default_value>
-            #status: <status_value> # a string
-            #constraints: 
-            # list of <type_constraints>
-            # each of one of the forms
-              # Scalar grammar
-              #<operator>: <scalar_value> 
-              # Dual scalar grammar
-              #<operator>: [ <scalar_value_1>, <scalar_value_2> ]
-              # List grammar
-              #<operator> [ <value_1>, <value_2>, ..., <value_n> ]
-              # Regular expression (regex) grammar
-              #pattern: <regular_expression_value>
-              # Schema grammar
-              #schema: <schema_definition>
-        #implementation: <Operation implementation definition>
-        # one of either:
-        # short notation for use with single artifact
-        #implementation: <primary_artifact_name>
-        # Short notation for use with multiple artifact
-        #implementation: 
-          #primary: <primary_artifact_name>
-          #dependencies:
-            #- <list_of_dependent_artifact_names>
-          #operation_host : SELF
-          #timeout : 60
-        #Extended notation for use with single artifact
-        #implementation: 
-          #primary:
-            #<primary_artifact_definition>
-          #operation_host : HOST
-          #timeout : 100
-        #Extended notation for use with multiple artifacts
-        #implementation: 
-          #primary: 
-            #<primary_artifact_definition>   
-          #dependencies: 
-            #- <list_of_dependent_artifact definitions>
-          #operation_host: HOST
-          #timeout: 120
+        inputs:
+          request.content.json:
+            type: Pet
+            description: Create a new pet in the store
+            required: true
+        # following lines commented out pending fix of puccini issue #41
+        # outputs:
+        #   open_api_responses_value:
+        #     type: integer
+        #     description: The HTTP Status Code used to indicate the status of the executed operation. The available status codes are defined by RFC7231 and registered status codes are listed in the IANA Status Code Registry.
+        #   open_api_responses_description:
+        #     type: string
+        #     description: A short description of the response.
+          # open_api_responses.200.content.application.json:
+        #     type: json
 
-        #inputs: 
-          #<property_definitions>
+      updatePet:
+        description: Update an existing pet by Id
+        inputs:
+          request.content.json:
+            type: Pet
+            description: Update an existent pet in the store
+            required: true
 
+      #get cannot be mapped to TOSCA as the source document does not supply a unique id
 
-    #notifications:
-      #<notification_defintions>
+      findPetsByStatus:
+        description: "Finds Pets by status Multiple status values can be provided with comma separated strings"
+        inputs:
+          status:
+            description: Status values that need to be considered for filter
+            required: false
+            type: list
+            entry_schema: status_item
+              # The source document includes a keyword explode which has the effect of allowing any combination of items in the valid_values list
+              # There is no TOSCA data type equivalent so we can't use the unadorned valid_values constraint below
+              # constraints:
+              # - valid_values:
+              #     - available
+              #     - pending
+              #     - sold
+              # instead, when explode = true in the source document we need to make the type as list not string and allow a list of status items which are defined in the data types
+            default: 
+            # And now we are using a list the default has to be a list not a string
+             - available
 
-
-
-
-#relationship_types:
-  # map of relationship type definitions
-  # used to connect nodes together, e.g. to model dependency. They are nothing to do with network connections
-  # some are defined in the spec, this is for refining those or creating new ones
+      loginUser:
+        inputs:
+          username:
+            type: string
+            default: root
 
 node_types:
   my_node_type:
@@ -230,7 +170,30 @@ node_types:
         operations:
           addPet:
             # While outputs is commented out we need to have something to say here so until issue #41 is fixed just overwrite teh description
-            description: Add a new pet to the store
+            description: Add a new pet to the store Add a new pet to the store
+            # Commented out next lines pending resolution of puccini issue #41
+            # outputs:
+            #   Node type template author to uncomment the lines below which are appropriate to that node type and add a mapping to an attribute
+            #   e.g.  In this context the following line is probably not appropriate.
+            #   open_api_responses_value: SELF, open_api_response_code
+            #   open_api_responses_description: SELF, open_api_response_description
+            #   e.g. but the next line probably is appropriate so map it to the pet attribute
+            # Commented out next lines pending resolution of puccini issue #41
+            #   open_api_responses_200_content: SELF, pet
+          updatePet:
+            description: Update an existing pet Update an existing pet by Id 
+            # Commented out next lines pending resolution of puccini issue #41
+            # outputs:
+            #   Node type template author to uncomment the lines below which are appropriate to that node type and add a mapping to an attribute
+            #   e.g.  In this context the following line is probably not appropriate.
+            #   open_api_responses_value: SELF, open_api_response_code
+            #   open_api_responses_description: SELF, open_api_response_description
+            #   e.g. but the next line probably is appropriate so map it to the pet attribute
+            # Commented out next lines pending resolution of puccini issue #41
+            #   open_api_responses_200_content: SELF, pet
+          #get cannot be mapped to TOSCA as the source document does not supply a unique id
+          findPetsByStatus:
+            description: Finds Pets by status Multiple status values can be provided with comma separated strings
             # Commented out next lines pending resolution of puccini issue #41
             # outputs:
             #   Node type template author to uncomment the lines below which are appropriate to that node type and add a mapping to an attribute
@@ -242,156 +205,11 @@ node_types:
             #   open_api_responses_200_content: SELF, pet
 
 
-        #     description: Successful operation
-        #     content:
-        #       application/xml:
-        #         schema:
-        #           $ref: '#/components/schemas/Pet'
-        #       application/json:
-        #         schema:
-        #           $ref: '#/components/schemas/Pet'
-          #<attribute mappings>
-  # map of node type definitions
-  # defines some item of functionality, e.g. a webserver. TOSCA defined nodes include other types, for example they have the standard lifecycle interfaces.
-  # some are defined in the spec, this is for refining those or creating new ones
-  # map of <node_type_name>:  # mandatory name
-  # each of the form
-    #derived_from: <parent_node_type_name> # mandatory defined node type
-    #version: <version_number>
-    #metadata: 
-      #<map of string>
-    #description: <node_type_description>
-    #attributes:
-      #map of <attribute_definitions>
-      # each of the form
-      #attributes:
-        #<attribute_name>:
-          #type: <attribute_type>
-          #description: <attribute_description>
-          #default: <default_value> 
-          #status: <status_value>
-          #key_schema : <key_schema_definition>
-          #entry_schema: <entry_schema_definition>
-
-    #properties:
-      #map of <property_definitions>
-    #requirements:
-      #list of - <requirement_definitions>
-    #capabilities:
-      #map of <capability_definitions>
-    #interfaces: 
-      #map of <interface_definitions>
-      # each of the form
-      #<interface_definition_name>:
-        #type: <interface_type_name>
-        #inputs: 
-          #<property_definitions>
-          # each of the form
-            #<property_name>: #mandatory unique string
-            #type: <property_type> # name of a defined property type.
-            #description: <property_description>
-            #required: <property_required> # boolean, default true
-            #default: <default_value>
-            #status: <status_value> # a string
-            #constraints: 
-            # list of <type_constraints>
-            # each of one of the forms
-              # Scalar grammar
-              #<operator>: <scalar_value> 
-              # Dual scalar grammar
-              #<operator>: [ <scalar_value_1>, <scalar_value_2> ]
-              # List grammar
-              #<operator> [ <value_1>, <value_2>, ..., <value_n> ]
-              # Regular expression (regex) grammar
-              #pattern: <regular_expression_value>
-              # Schema grammar
-              #schema: <schema_definition>
-            #key_schema : <key_schema_definition> # if the property_type is map, represents the optional schema definition for the keys used to identify entries in that map.
-            #entry_schema: <entry_schema_definition> # if the property_type is map or list, represents the optional schema definition for the entries in that map or list.
-            #metadata: 
-              # map of strings
-          #<operation_definitions>
-
-    #artifacts:
-      #map of <artifact_definitions>
-
-
-#group_types:
-  # map of group type definitions
-  # used to group nodes so that a policy applies to all items in the group
-
-#policy_types:
-  # ordered list of policy type definitions
-  # defines actions to be taken given an event
-  # each of the form
-  # <policy_type_name>: # mandatory unique string
-    # derived_from: <parent_policy_type_name> # mandatory defined policy type
-    # version: <version_number>
-    # metadata: 
-      #<map of string>
-    # description: <policy_description>
-    # properties:
-      #<property_definitions> 
-    # targets: [ <list_of_valid_target_types> ]
-    # triggers:
-      #<list_of_trigger_definitions>
-
 
 topology_template:
   description: A template to show instantiation of a RESTapi interface 
   
-  #inputs: 
-  # Property definition for each input
-    # Definition is of the form
-    #<parameter_name>: # mandatory unique string
 
-    #type: # mandatory, name of a defined yaml type
-
-    #description: <parameter_description>
-
-    #value: <parameter_value> | { <parameter_value_expression> } 
-
-    #required: <parameter_required>
-
-    #default: <parameter_default_value>
-
-    #status: <status_value>
-
-    #constraints: 
-    # list of <type_constraints>
-    # each of one of the forms
-      # Scalar grammar
-      #<operator>: <scalar_value> 
-      # Dual scalar grammar
-      #<operator>: [ <scalar_value_1>, <scalar_value_2> ]
-      # List grammar
-      #<operator> [ <value_1>, <value_2>, ..., <value_n> ]
-      # Regular expression (regex) grammar
-      #pattern: <regular_expression_value>
-      # Schema grammar
-      #schema: <schema_definition>
-    
-    #entry_schema:
-    # allows defintion of complex input types
-      #description: <entry_description>
-      #type: <entry_type>
-      #constraints: 
-      # list of <type_constraints>
-      # each of one of the forms
-        # Scalar grammar
-        #<operator>: <scalar_value> 
-        # Dual scalar grammar
-        #<operator>: [ <scalar_value_1>, <scalar_value_2> ]
-        # List grammar
-        #<operator> [ <value_1>, <value_2>, ..., <value_n> ]
-        # Regular expression (regex) grammar
-        #pattern: <regular_expression_value>
-        # Schema grammar
-        #schema: <schema_definition>
-
-  #outputs: <output_parameter_list>
-  # Property definition for each output
-    # Definition is of the same form as input
 
   node_templates:
     my_node:
@@ -400,4 +218,11 @@ topology_template:
         management:
           inputs:
             open_api_servers:
-            - url: http://mynode_management_interface.com
+              - url: http://mynode_management_interface.com
+              -
+                  url: http://mynode_management_interface_backup.com
+                  description: "standby"
+      artifacts:
+        type: oas3.yaml
+        file: openapi.yml
+
