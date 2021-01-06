@@ -1,5 +1,5 @@
 tosca_definitions_version: tosca_simple_yaml_1_3
-description: Contains an interface definition derived from an OpenAPI OAS3 document and attached to a node
+description: Contains an interface definition derived from an OpenAPI OAS3 document and attached to a relationship
 
 artifact_types:
   oas3.json:
@@ -198,8 +198,9 @@ interface_types:
             #                   }
             #               }
 
-node_types:
-  my_node_type:
+relationship_types:
+  management_relationship_type_for_my_node_type:
+    description: An relationship to which the pet_store interface_type is attached. Would be auto-generated from API spec
     attributes:
     #Each content schema mentioned in the responses section of the API spec should have a prebuilt attribute ready for potential use
       open_api_response_code:
@@ -237,32 +238,39 @@ node_types:
             #   Node type template author to uncomment the lines below which are appropriate to that node type and add a mapping to an attribute
             #   open_api_responses_value: [ SELF, open_api_response_code ]
             #   open_api_responses_200_content.application.json: [ SELF, pet ]
+node_types:
+  my_node_type:
+
     artifacts:
       oda_definition:
         description: ODA component definition file for my_node_type
         type: tmforum.oda.definition
         file: my_node_type_oda_file.yaml
 
+  orchestrator_type:
+    description: A simple node to represent the orchestrator_type
 
 topology_template:
   description: A template to show instantiation of a RESTapi interface 
   
-
-
   node_templates:
     my_node:
       type: my_node_type
-      interfaces:
-        management:
-          inputs:
-            open_api_servers:
-              - url: https://10.10.10.10
-              -
-                  url: https://mynode_management_interface_backup.com
-                  description: "standby"
       artifacts:
         management_interface:
           type: oas3.yaml
           file: openapi.yml
 
+    my_orchestrator:
+      type: orchestrator_type
 
+  relationship_templates:
+    my_node_management:
+      type: management_relationship_type_for_my_node_type
+      description: The relationship between the orchestrator and the component node used to manage the component
+      interfaces:
+        management:
+          inputs:
+            open_api_servers:
+              # The value below would most likely be obtained using a get_attribute on the target component
+              - url: https://10.10.10.10

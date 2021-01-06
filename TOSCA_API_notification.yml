@@ -1,0 +1,122 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+description: Contains an interface definition derived from an OpenAPI OAS3 document containing callbacks
+
+artifact_types:
+  oas3.json:
+    description: "Major version 3 of OpenAPI Specification as specified by https://www.openapis.org/ expressed in JSON"
+    derived_from: tosca.artifacts.Root
+    mime_type: application/json
+    file_ext: [json]
+
+  oas3.yaml:
+    description: "Major version 3 of OpenAPI Specification as specified by https://www.openapis.org/ expressed in YAML"
+    derived_from: tosca.artifacts.Root
+    file_ext: [yaml,yml]
+
+data_types:
+  rest_api_server_entry:
+    description: "A compound datatype to hold an entry in the servers list defined in an OpenAPI spec"
+    properties:
+      url:
+        type: rest_api_url
+      description: 
+        type: string
+        required: false
+      variables:
+        type: rest_api_server_variables
+        required: false
+
+  rest_api_url:
+    derived_from: string
+    description: "A string to hold a URL used in RESTAPI specifications. Use a regular expression to limit strings to valid URLs"
+    constraints:
+      - pattern: ^[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)
+        
+  rest_api_server_variables:
+    description: "A compound datatype to hold the server variable object of OpenAPI spec"
+    properties:
+      enum:
+        type: list
+        entry_schema: 
+          type: string
+      default:
+        type: string
+      description:
+        type: string
+
+  open_api_response_code_type:
+    description: The HTTP Status Code used to indicate the status of the executed operation. The available status codes are defined by RFC7231 and registered status codes are listed in the IANA Status Code Registry.
+    derived_from: integer
+    constraints:
+      - min_length: 3
+      - max_length: 3
+
+interface_types:
+  callback_example:
+    metadata:
+      open_api_info: "
+  title: Callback Example
+  version: 1.0.0"
+    description: A textual description added to TOSCA and not automatically mapped from the OpenAPI spec 
+    inputs: 
+      open_api_servers:
+        description: A list of servers which implement this interface. Structure matches that in OAS3. Allows URL to be given a value at runtime using get_attribute on the instantiate node which provides the RestAPI server function for this interface
+        type: list
+        entry_schema: rest_api_server_entry
+    operations:
+      streams.post:
+        description: subscribes a client to receive out-of-band data
+        inputs:
+          callbackUrl:
+            required: true
+            description: "the location where data will be sent.  Must be network accessible
+            by the source server"
+            type: string
+    notifications:
+      streams.post:
+        description: added just so there is something here while outputs are commented out
+        # commented out pending v2 support in puccini
+        # outputs:
+        #   onData.post.requestBody.content.application.json:
+        #     type: json
+
+node_types:
+  my_node_type:
+    attributes:
+    #Each content schema mentioned in the responses section of the API spec should have a prebuilt attribute ready for potential use
+      open_api_response_code:
+        type: open_api_response_code_type
+      open_api_response_description:
+        type: string
+      events:
+        type: json
+    interfaces:
+      management_stream:
+        type: callback_example
+
+topology_template:
+  description: A template to show instantiation of a RESTapi interface with notifications
+
+  node_templates:
+    my_node:
+      type: my_node_type
+      interfaces:
+        management_stream:
+          inputs:
+            open_api_servers:
+              - url: https://10.10.10.20
+              -
+                  url: https://mynode_management_stream_interface_backup.com
+                  description: "standby"
+          operations:
+            streams.post:
+              inputs:
+                callbackUrl: dummy_to_be_substituted_by_orchestrator
+          notifications:
+            streams.post:
+              outputs:
+                onData.requestBody.content.application.json: [ SELF, events ]
+      artifacts:
+        type: oas3.yaml
+        file: callback-example.yml
+
