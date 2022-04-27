@@ -9,3 +9,5 @@ The TOSCA Interface type was also used in a relationship type defintion and that
 Notifications using callbacks were a particular problem to map and were recorded in [TOSCA_API_notification.yml](TOSCA_API_notification.yml)
 
 My conclusion was that it would be possible to write an automatic translator which took and OAS3 spec and an input and created TOSCA interface type defintion as an output.
+
+**Update April 2022 --- Chris Lauwers has created something similar to this at https://github.com/lauwers/oas2tosca**
